@@ -40,11 +40,12 @@ export function WebSetupPage({ onConnected }: { onConnected: () => void }) {
     setProbeResult(null)
 
     try {
-      const normalizedUrl = url.trim().replace(/\/+$/, '')
-      const res = await fetch(`${normalizedUrl}/api/status`, {
+      // Probe through the Vite proxy — the proxy is already configured
+      // with HERMES_WEB_TARGET pointing to the actual dashboard
+      const res = await fetch('/api/status', {
         signal: AbortSignal.timeout(10_000),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
 
       setProbeResult({
         reachable: res.ok,
@@ -77,9 +78,8 @@ export function WebSetupPage({ onConnected }: { onConnected: () => void }) {
       const normalizedUrl = url.trim().replace(/\/+$/, '')
 
       // Validate the token by making a test request
-      const res = await fetch(`${normalizedUrl}/api/sessions?limit=1`, {
+      const res = await fetch('/api/sessions?limit=1', {
         headers: { 'X-Hermes-Token': token.trim() },
-        credentials: 'include',
         signal: AbortSignal.timeout(10_000),
       })
 

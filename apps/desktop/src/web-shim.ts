@@ -104,7 +104,7 @@ async function proxyFetch<T = unknown>(
     throw new Error('Dashboard URL and access token are required. Open Settings to configure.')
   }
 
-  const url = `${baseUrl}${path}`
+  const url = path
   const timeoutMs = options.timeoutMs ?? 30_000
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -119,8 +119,6 @@ async function proxyFetch<T = unknown>(
       method: options.method || 'GET',
       headers,
       signal: controller.signal,
-      // Include credentials so the browser sends cookies set by the same origin
-      credentials: 'include',
     }
 
     if (options.body !== undefined) {
@@ -157,12 +155,11 @@ async function proxyFetch<T = unknown>(
  */
 async function mintWsTicket(baseUrl: string): Promise<string> {
   const token = getStoredToken()
-  const res = await fetch(`${baseUrl}/api/auth/ws-ticket`, {
+  const res = await fetch('/api/auth/ws-ticket', {
     method: 'POST',
     headers: {
       'X-Hermes-Token': token,
     },
-    credentials: 'include',
   })
 
   if (!res.ok) {
@@ -278,9 +275,8 @@ const webShim = {
 
     try {
       const normalizedUrl = normalizeBaseUrl(url)
-      const res = await fetch(`${normalizedUrl}/api/status`, {
+      const res = await fetch('/api/status', {
         headers: token ? { 'X-Hermes-Token': token } : {},
-        credentials: 'include',
       })
       const data = await res.json()
       return {
@@ -297,17 +293,13 @@ const webShim = {
     const normalizedUrl = normalizeBaseUrl(remoteUrl)
 
     try {
-      const res = await fetch(`${normalizedUrl}/api/status`, {
-        credentials: 'include',
-      })
+      const res = await fetch('/api/status')
       const data = await res.json()
 
       // Check auth providers
       let providers: { name: string; displayName: string; supportsPassword?: boolean }[] = []
       try {
-        const provRes = await fetch(`${normalizedUrl}/api/auth/providers`, {
-          credentials: 'include',
-        })
+        const provRes = await fetch('/api/auth/providers')
         if (provRes.ok) {
           providers = await provRes.json()
         }
