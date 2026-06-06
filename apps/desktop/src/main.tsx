@@ -1,7 +1,7 @@
 import './styles.css'
 
 import { QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 
@@ -12,8 +12,22 @@ import { I18nProvider } from './i18n'
 import { installClipboardShim } from './lib/clipboard'
 import { queryClient } from './lib/query-client'
 import { ThemeProvider } from './themes/context'
+import { installWebShim } from './web-shim'
+import { WebSetupPage } from './web-setup-page'
 
 installClipboardShim()
+
+// ── Web client detection ──────────────────────────────────────────────────
+// When running outside Electron (plain browser), install the web shim that
+// provides `window.hermesDesktop` via fetch/WS instead of IPC.
+const isElectron = Boolean(
+  typeof window !== 'undefined' && (window as any).hermesDesktop
+)
+
+if (!isElectron) {
+  console.log('[main] Non-Electron environment detected — installing web shim')
+  installWebShim()
+}
 
 // Dev-only: install __PERF_DRIVE__ + __PERF_PROBE__ on window so the
 // scripts/ harnesses can drive a synthetic stream + record render cost.
@@ -24,8 +38,30 @@ if (import.meta.env.MODE !== 'production') {
   import('./app/chat/perf-probe')
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+// ── Root component with web setup gate ────────────────────────────────────
+
+function Root() {
+  // In web mode, check if the user has configured their connection
+  const [configured, setConfigured] = useState(() => {
+    if (isElectron) return true // Electron handles its own setup flow
+    try {
+      const url = localStorage.getItem('hermes_web_dashboard_url')
+      const token = localStorage.getItem('hermes_web_access_token')
+      return Boolean(url && token)
+    } catch {
+      return false
+    }
+  })
+
+  if (!configured && !isElectron) {
+    return (
+      <WebSetupPage
+        onConnected={() => setConfigured(true)}
+      />
+    )
+  }
+
+  return (
     <ErrorBoundary label="root">
       <QueryClientProvider client={queryClient}>
         <I18nProvider>
@@ -39,5 +75,11 @@ createRoot(document.getElementById('root')!).render(
         </I18nProvider>
       </QueryClientProvider>
     </ErrorBoundary>
+  )
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Root />
   </StrictMode>
 )
