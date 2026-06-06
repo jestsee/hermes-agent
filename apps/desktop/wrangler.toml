@@ -1,0 +1,12 @@
+name = "hermes-web-client"
+main = "worker/index.ts"
+compatibility_date = "2025-06-06"
+
+# Static assets from Vite production build
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
+# Workers Logs — no sensitive data logged
+[observability]
+enabled = true

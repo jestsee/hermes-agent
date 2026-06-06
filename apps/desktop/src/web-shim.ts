@@ -113,6 +113,7 @@ async function proxyFetch<T = unknown>(
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Hermes-Token': token,
+      'X-Hermes-Target': baseUrl,
     }
 
     const fetchOptions: RequestInit = {
@@ -159,6 +160,7 @@ async function mintWsTicket(baseUrl: string): Promise<string> {
     method: 'POST',
     headers: {
       'X-Hermes-Token': token,
+      'X-Hermes-Target': baseUrl,
     },
   })
 
@@ -276,7 +278,7 @@ const webShim = {
     try {
       const normalizedUrl = normalizeBaseUrl(url)
       const res = await fetch('/api/status', {
-        headers: token ? { 'X-Hermes-Token': token } : {},
+        headers: token ? { 'X-Hermes-Token': token, 'X-Hermes-Target': url } : {},
       })
       const data = await res.json()
       return {
