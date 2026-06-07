@@ -18,6 +18,7 @@ export const HERMES_BASE_PATH = readBasePath();
 const BASE = HERMES_BASE_PATH;
 
 import type { DashboardTheme } from "@/themes/types";
+import { clearDashboardConfig } from "./connection-config";
 
 // Ephemeral session token for protected endpoints.
 // Injected into index.html by the server — never fetched via API.
@@ -30,6 +31,11 @@ declare global {
      * WS-upgrade path from legacy ``?token=`` to single-use ``?ticket=``
      * fetched via :func:`getWsTicket`. */
     __HERMES_AUTH_REQUIRED__?: boolean;
+    /** Set by ``main.tsx`` to ``"stored"`` when the session token was loaded
+     * from localStorage (SetupPage config) rather than server-injected. Lets
+     * ``fetchJSON`` differentiate a stale-stored-config 401 from a normal
+     * loopback server-restart 401. */
+    __HERMES_CONFIG_SOURCE__?: "server" | "stored";
   }
 }
 let _sessionToken: string | null = null;
@@ -93,6 +99,18 @@ export async function fetchJSON<T>(
       }
       window.location.assign(body.login_url);
       // Never resolve — the page is about to unload.
+      return new Promise<T>(() => {});
+    }
+    // Stored config (SetupPage): the token in localStorage no longer works.
+    // Clear it and redirect to the setup page instead of showing broken state.
+    if (window.__HERMES_CONFIG_SOURCE__ === "stored") {
+      clearDashboardConfig();
+      try {
+        sessionStorage.setItem("hermes.needsSetup", "1");
+      } catch {
+        /* privacy mode — ignore */
+      }
+      window.dispatchEvent(new CustomEvent("hermes:auth-required"));
       return new Promise<T>(() => {});
     }
     // Loopback mode: ``_SESSION_TOKEN`` rotates on every server restart
