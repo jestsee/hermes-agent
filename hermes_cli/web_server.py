@@ -8619,6 +8619,9 @@ def mount_spa(application: FastAPI):
             html = html.replace('href="/fonts/', f'href="{prefix}/fonts/')
             html = html.replace('href="/ds-assets/', f'href="{prefix}/ds-assets/')
             html = html.replace('src="/ds-assets/', f'src="{prefix}/ds-assets/')
+            html = html.replace('href="/icons/', f'href="{prefix}/icons/')
+            html = html.replace('href="/manifest', f'href="{prefix}/manifest')
+            html = html.replace('src="/sw.js"', f'src="{prefix}/sw.js"')
         html = html.replace("</head>", f"{bootstrap_script}</head>", 1)
         return HTMLResponse(
             html,

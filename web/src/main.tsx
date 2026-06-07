@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { registerSW } from "virtual:pwa-register";
 import "./index.css";
 import App from "./App";
 import { SystemActionsProvider } from "./contexts/SystemActions";
@@ -8,8 +9,8 @@ import { exposePluginSDK } from "./plugins";
 import { ThemeProvider } from "./themes";
 import { HERMES_BASE_PATH } from "./lib/api";
 
-// Expose the plugin SDK before rendering so plugins loaded via <script>
-// can access React, components, etc. immediately.
+registerSW({ immediate: true });
+
 exposePluginSDK();
 
 createRoot(document.getElementById("root")!).render(

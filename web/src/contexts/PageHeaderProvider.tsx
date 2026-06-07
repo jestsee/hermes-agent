@@ -108,8 +108,9 @@ export function PageHeaderProvider({
 
             {end ? (
               <div
+                data-toolbar-end
                 className={cn(
-                  "flex min-w-0 sm:max-w-md sm:flex-1",
+                  "flex min-w-0 flex-wrap items-center gap-2 sm:max-w-md sm:flex-1 sm:flex-nowrap sm:gap-3",
                   isChatRoute
                     ? "w-auto shrink-0 justify-end"
                     : "w-full justify-start sm:justify-end",
