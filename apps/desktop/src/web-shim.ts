@@ -295,13 +295,17 @@ const webShim = {
     const normalizedUrl = normalizeBaseUrl(remoteUrl)
 
     try {
-      const res = await fetch('/api/status')
+      const res = await fetch('/api/status', {
+        headers: { 'X-Hermes-Target': normalizedUrl },
+      })
       const data = await res.json()
 
       // Check auth providers
       let providers: { name: string; displayName: string; supportsPassword?: boolean }[] = []
       try {
-        const provRes = await fetch('/api/auth/providers')
+        const provRes = await fetch('/api/auth/providers', {
+          headers: { 'X-Hermes-Target': normalizedUrl },
+        })
         if (provRes.ok) {
           providers = await provRes.json()
         }
