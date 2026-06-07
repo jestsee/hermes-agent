@@ -278,7 +278,10 @@ const webShim = {
     try {
       const normalizedUrl = normalizeBaseUrl(url)
       const res = await fetch('/api/status', {
-        headers: token ? { 'X-Hermes-Token': token, 'X-Hermes-Target': url } : {},
+        headers: {
+          'X-Hermes-Target': url,
+          ...(token && { 'X-Hermes-Token': token }),
+        },
       })
       const data = await res.json()
       return {

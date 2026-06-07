@@ -6,40 +6,38 @@
  * (browsers can't set Cookie headers on cross-origin fetches).
  *
  * Auth flow:
- *   1. Client sends `X-Hermes-Token: <jwt>` + `X-Hermes-Target: <dashboard-url>`
- *   2. Worker converts header → `Cookie: hermes_session_at=<jwt>`
- *   3. Worker proxies to the target dashboard
- *   4. Response returned to client
- *
- * Static assets (HTML/JS/CSS) are served automatically by Cloudflare
- * Workers + Assets from the `dist/` directory.
+ *   1. Client sends `X-Hermes-Token: <jwt>` (optionally `X-Hermes-Target`)
+ *   2. Worker uses HERMES_DASHBOARD_URL env var (or X-Hermes-Target header)
+ *   3. Worker converts token header -> `Cookie: hermes_session_at=<jwt>`
+ *   4. Worker proxies to the target dashboard
+ *   5. Response returned to client
  */
 
 export interface Env {
 	ASSETS: { fetch: (request: Request) => Promise<Response> };
+	HERMES_DASHBOARD_URL: string;
 }
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 
-		// API proxy — forward to dashboard with cookie injection
 		if (url.pathname.startsWith('/api/')) {
-			return handleApiProxy(request);
+			return handleApiProxy(request, env);
 		}
 
-		// Static assets (served by Cloudflare Workers + Assets)
 		return env.ASSETS.fetch(request);
 	},
 };
 
-async function handleApiProxy(request: Request): Promise<Response> {
-	const targetUrl = request.headers.get('X-Hermes-Target');
+async function handleApiProxy(request: Request, env: Env): Promise<Response> {
+	const targetUrl =
+		request.headers.get('X-Hermes-Target') || env.HERMES_DASHBOARD_URL;
 	const token = request.headers.get('X-Hermes-Token');
 
 	if (!targetUrl) {
 		return new Response(
-			JSON.stringify({ error: 'Missing X-Hermes-Target header' }),
+			JSON.stringify({ error: 'No dashboard URL configured' }),
 			{
 				status: 400,
 				headers: { 'Content-Type': 'application/json' },
@@ -60,13 +58,10 @@ async function handleApiProxy(request: Request): Promise<Response> {
 	const reqUrl = new URL(request.url);
 	const upstream = new URL(reqUrl.pathname + reqUrl.search, targetUrl);
 
-	// Clone headers, replace auth mechanism
 	const headers = new Headers(request.headers);
 	headers.set('Cookie', `hermes_session_at=${token}`);
 	headers.delete('X-Hermes-Token');
 	headers.delete('X-Hermes-Target');
-
-	// Remove hop-by-hop headers
 	headers.delete('Host');
 
 	const upstreamRequest = new Request(upstream.toString(), {

@@ -2,11 +2,12 @@ name = "hermes-web-client"
 main = "worker/index.ts"
 compatibility_date = "2025-06-06"
 
-# Static assets from Vite production build
+[vars]
+HERMES_DASHBOARD_URL = "https://hermes.jestsee.com"
+
 [assets]
 directory = "dist"
 binding = "ASSETS"
 
-# Workers Logs — no sensitive data logged
 [observability]
 enabled = true
