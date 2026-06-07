@@ -148,9 +148,43 @@ code, kbd, pre, samp, .font-mono, .font-mono-ui {
 }
 
 /* Nousnet's hermes-agent layout bumps `small` and `code` to readable
-   dashboard sizes. Keep in sync. */
-small { font-size: 1.0625rem; }
+   dashboard sizes. Keep in sync. `small` is intentionally not larger
+   than the body — overrides that pushed it past 1rem made secondary
+   labels look like body text on narrow screens. */
+small { font-size: 0.875rem; }
 code { font-size: 0.875rem; }
+
+/* ------------------------------------------------------------------ */
+/* Mobile-only touch target + hover affordances.                      */
+/* ------------------------------------------------------------------ */
+
+/* iOS HIG / Android Material: 44x44 minimum tap area. We override the
+   32px `size="icon"` buttons only on phones so the desktop layout
+   stays compact. Target by attribute selector — the dashboard uses
+   size="icon" with `aria-label` on every icon-only button. */
+@media (max-width: 768px) {
+  button[aria-label][data-size="icon"],
+  button[size="icon"],
+  a[aria-label] {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
+
+/* Touch devices: hover-only tooltips (collapsed sidebar, language
+   switcher) never trigger reliably. The collapsed-sidebar tooltip in
+   `App.tsx` is gated on hover; on hover:none we fall back to a tap
+   toggle. The actual toggle lives in JS (App.tsx), but we also hide
+   the small "tooltip" pseudo-element / portal that would otherwise
+   appear stuck. */
+@media (hover: none) {
+  /* Page header's stacked toolbar: pull buttons up to 44px so they're
+     easy to tap. Component-level utilities already wrap; this just
+     bumps the gap and size. */
+  header[role="banner"] [data-toolbar-end] > * {
+    min-height: 2.75rem;
+  }
+}
 
 /* Shadcn-compat tokens.
    The dashboard's page code predates the Nous DS and uses shadcn-style

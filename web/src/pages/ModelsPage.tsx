@@ -434,7 +434,7 @@ function ModelCard({
               reasoning={entry.reasoning_tokens}
             />
 
-            <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
               <div className="text-center">
                 <div className="font-mono font-semibold">{entry.sessions}</div>
                 <div className="text-xs text-text-tertiary">
@@ -965,7 +965,7 @@ export default function ModelsPage() {
       {data && (
         <>
           {data.models.length > 0 ? (
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {data.models.map((m, i) => (
                 <ModelCard
                   key={`${m.model}:${m.provider}`}

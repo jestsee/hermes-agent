@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 const BACKEND = process.env.HERMES_DASHBOARD_URL ?? "http://127.0.0.1:9119";
@@ -58,7 +59,66 @@ function hermesDevToken(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), hermesDevToken()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    hermesDevToken(),
+    VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: null,
+      includeAssets: ["favicon.ico", "icons/*.png", "icons/*.svg"],
+      manifest: {
+        name: "Hermes Agent Dashboard",
+        short_name: "Hermes",
+        description: "AI agent dashboard with chat, sessions, and system management",
+        theme_color: "#041c1c",
+        background_color: "#041c1c",
+        display: "standalone",
+        orientation: "any",
+        scope: "./",
+        start_url: "./",
+        icons: [
+          {
+            src: "./icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "./icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "./icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,woff2,svg}"],
+        navigateFallback: undefined,
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/api\//,
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /\.(?:woff2|svg)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "hermes-fonts",
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+        ],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

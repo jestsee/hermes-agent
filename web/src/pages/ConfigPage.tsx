@@ -122,8 +122,24 @@ export default function ConfigPage() {
   const [confirmReset, setConfirmReset] = useState(false);
   const { toast, showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const categoryListRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
   const { setEnd } = usePageHeader();
+
+  /* Scroll the active category tab into view on mobile. The desktop sidebar
+     doesn't need this (it's always visible), but on a phone the row is
+     horizontally scrollable and a tap can land on an off-screen item — the
+     centre-when-touched alignment makes it look broken. */
+  useEffect(() => {
+    const el = categoryListRef.current;
+    if (!el || !activeCategory) return;
+    const active = el.querySelector<HTMLElement>(
+      `[data-category="${activeCategory}"]`,
+    );
+    if (active) {
+      active.scrollIntoView({ block: "nearest", inline: "center" });
+    }
+  }, [activeCategory]);
 
   useLayoutEffect(() => {
     if (!config || !schema) {
@@ -531,7 +547,7 @@ export default function ConfigPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           <aside aria-label={t.config.filters} className="sm:w-56 sm:shrink-0">
             <div className="sm:sticky sm:top-4">
-              <div className="flex flex-col border border-border bg-muted/20">
+              <div className="flex flex-col sm:border sm:border-border sm:bg-muted/20">
                 <div className="hidden sm:flex items-center gap-2 px-3 py-2 border-b border-border">
                   <Filter className="h-3 w-3 text-text-tertiary" />
                   <span className="font-mondwest text-display text-xs tracking-[0.12em] text-text-secondary">
@@ -543,19 +559,24 @@ export default function ConfigPage() {
                   {t.config.sections}
                 </div>
 
-                <div className="flex sm:flex-col gap-1 sm:gap-px p-2 sm:pt-1 overflow-x-auto sm:overflow-x-visible scrollbar-none sm:max-h-[calc(100vh-260px)] sm:overflow-y-auto">
+                <div
+                  ref={categoryListRef}
+                  data-mobile-tab-bar
+                  className="flex sm:flex-col gap-1 sm:gap-px p-2 sm:pt-1 overflow-x-auto sm:overflow-x-visible scrollbar-none sm:max-h-[calc(100vh-260px)] sm:overflow-y-auto snap-x snap-mandatory"
+                >
                   {categories.map((cat) => {
                     const isActive = !isSearching && activeCategory === cat;
 
                     return (
                       <ListItem
                         key={cat}
+                        data-category={cat}
                         active={isActive}
                         onClick={() => {
                           setSearchQuery("");
                           setActiveCategory(cat);
                         }}
-                        className="rounded-none whitespace-nowrap px-2 py-1 text-xs"
+                        className="rounded-none whitespace-nowrap px-2 py-1 text-xs snap-center shrink-0"
                       >
                         <CategoryIcon
                           category={cat}
