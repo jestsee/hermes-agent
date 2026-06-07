@@ -369,13 +369,10 @@
   body,
   #root {
     height: 100%;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
   html {
     font-size: var(--dt-base-size, 0.875rem);
-    background: #0a0a0a;
   }
 
   body {
@@ -395,13 +392,6 @@
   button,
   textarea {
     font: inherit;
-  }
-
-  input,
-  textarea,
-  select {
-    -webkit-user-select: auto;
-    user-select: auto;
   }
 
   :where(
